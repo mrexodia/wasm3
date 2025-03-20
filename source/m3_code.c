@@ -207,6 +207,7 @@ bool  MapPCToOffset  (IM3CodePage i_page, pc_t i_pc, u32 * o_moduleOffset)
     M3CodeMappingPage * mapping = i_page->info.mapping;
 
     u32 pcOffset = i_pc - mapping->basePC;
+    //printf("pcOffset: 0x%X\n", pcOffset);
 
     u32 left = 0;
     u32 right = mapping->size;
