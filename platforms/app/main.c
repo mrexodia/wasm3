@@ -18,6 +18,8 @@
 #define LINK_WASI
 #endif
 
+static m3_wasi_context_t wasi_context;
+
 #if defined(d_m3HasTracer)
 #include "m3_api_tracer.h"
 #endif
@@ -75,7 +77,7 @@ M3Result link_all  (IM3Module module)
     if (res) return res;
 
 #if defined(LINK_WASI)
-    res = m3_LinkWASI (module);
+    res = m3_LinkWASI (module, &wasi_context);
     if (res) return res;
 #endif
 
@@ -151,6 +153,9 @@ M3Result repl_load  (const char* fn)
     if (result) goto on_error;
 
     m3_SetModuleName(module, modname_from_fn(fn));
+
+    m3_wasi_context_t* wasi_context = malloc(sizeof(m3_wasi_context_t));
+    memset(wasi_context, 0, sizeof(m3_wasi_context_t));
 
     result = link_all (module);
     if (result) goto on_error;
@@ -269,16 +274,15 @@ M3Result repl_call  (const char* name, int argc, const char* argv[])
             argv[0] = modname_from_fn(argv[0]);
         }
 
-        m3_wasi_context_t* wasi_ctx = m3_GetWasiContext();
-        wasi_ctx->argc = argc;
-        wasi_ctx->argv = argv;
+        wasi_context.argc = argc;
+        wasi_context.argv = argv;
 
         result = m3_CallArgv(func, 0, NULL);
 
         print_gas_used();
 
         if (result == m3Err_trapExit) {
-            exit(wasi_ctx->exit_code);
+            exit(wasi_context.exit_code);
         }
 
         return result;
